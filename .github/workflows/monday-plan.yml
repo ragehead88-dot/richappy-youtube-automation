@@ -1,0 +1,44 @@
+name: 월요일 09:00 — 주간 기획안 3개
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"  # 월요일 00:00 UTC = 09:00 KST
+  workflow_dispatch:
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 경쟁 채널 데이터 다운로드 (sunday-collect 아티팩트)
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: collection-data
+          workflow: sunday-collect.yml
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: week_meta 다운로드 (sunday-proposals 아티팩트)
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: week-meta
+          workflow: sunday-proposals.yml
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: 주간 기획안 3개 생성
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TRACKER_DB_ID: ${{ secrets.NOTION_TRACKER_DB_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python scripts/generate_weekly_plan.py

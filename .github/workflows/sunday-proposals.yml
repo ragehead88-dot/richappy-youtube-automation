@@ -1,0 +1,46 @@
+name: 일요일 10:00 — 제목·썸네일 제안 10개
+
+on:
+  workflow_run:
+    workflows: ["일요일 09:00 — 경쟁 채널 수집"]
+    types:
+      - completed
+  workflow_dispatch:
+
+jobs:
+  proposals:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 수집 데이터 다운로드 (sunday-collect 아티팩트)
+        uses: actions/download-artifact@v4
+        with:
+          name: collection-data
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+        continue-on-error: true
+
+      - name: 제안 10개 생성
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TRACKER_DB_ID: ${{ secrets.NOTION_TRACKER_DB_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python scripts/generate_proposals.py
+
+      - name: week_meta.json 보관 (월요일 워크플로우용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: week-meta
+          path: week_meta.json
+          retention-days: 2
