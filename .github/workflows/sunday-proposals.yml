@@ -1,0 +1,41 @@
+name: 일요일 10:00 — 제목·썸네일 제안 생성
+
+on:
+  schedule:
+    - cron: "0 1 * * 0"  # 일요일 01:00 UTC = 10:00 KST
+  workflow_dispatch:
+
+jobs:
+  proposals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 경쟁 채널 데이터 다운로드 (일요일 09:00 결과물)
+        uses: actions/download-artifact@v4
+        with:
+          name: collection-data
+        continue-on-error: true  # 없어도 스크립트 내부에서 fallback 처리
+
+      - name: 제안 10개 생성
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TRACKER_DB_ID: ${{ secrets.NOTION_TRACKER_DB_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python scripts/generate_proposals.py
+
+      - name: week_meta.json 보관 (월요일 작업용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: week-meta
+          path: week_meta.json
+          retention-days: 2

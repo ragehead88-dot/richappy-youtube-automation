@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>리채피 촬영 슬라이드 | 행동경제학자의 뉴스 대응법</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{background:#050505;color:#fff;font-family:'Noto Sans KR',sans-serif;}
+
+/* ── SLIDE BASE ── */
+.slide{
+  width:960px; height:540px;
+  background:#000;
+  position:relative;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  padding:44px 56px 44px 56px;
+  margin:0 auto 4px;
+  flex-shrink:0;
+}
+
+/* ── BREADCRUMB LABEL ── */
+.label{
+  font-family:'Space Mono',monospace;
+  font-size:11px; letter-spacing:.18em;
+  color:#5bc4d8; text-transform:uppercase;
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:18px;
+}
+.label::before{
+  content:''; display:inline-block;
+  width:28px; height:1.5px; background:#5bc4d8;
+}
+
+/* ── TITLES ── */
+h1{font-size:52px;font-weight:900;line-height:1.18;letter-spacing:-.02em;margin-bottom:10px;}
+h2{font-size:44px;font-weight:900;line-height:1.2;letter-spacing:-.02em;margin-bottom:10px;}
+h3{font-size:22px;font-weight:700;margin-bottom:4px;}
+.blue{color:#3b82f6;}
+
+/* ── SUBTITLE BAR ── */
+.sub-bar{
+  border-left:3px solid #3b82f6;
+  padding:8px 14px;
+  font-size:15px; color:#aaa;
+  margin-top:16px;
+  max-width:480px;
+}
+
+/* ── RADAR ── */
+.radar{
+  position:absolute; right:-30px; top:50%; transform:translateY(-50%);
+  width:340px; height:340px;
+}
+.radar circle{fill:none;stroke:#1a2a3a;stroke-width:1.2;}
+
+/* ── CARD GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;align-content:center;}
+
+.card{
+  background:#111; border:1px solid #222;
+  border-radius:12px; padding:20px 20px 20px 22px;
+  position:relative; display:flex; flex-direction:column; gap:4px;
+}
+.card.active{border-color:#3b82f6; background:#0d1f3c;}
+.card .step-label{
+  font-family:'Space Mono',monospace;
+  font-size:10px; letter-spacing:.14em; color:#3b82f6;
+  margin-bottom:4px;
+}
+.card h3{font-size:18px;font-weight:700;color:#fff;}
+.card p{font-size:13px;color:#666;}
+.card .icon{
+  position:absolute; right:18px; top:50%; transform:translateY(-50%);
+  opacity:.35; font-size:22px;
+}
+
+/* ── QUOTE BLOCK ── */
+.quote-block{
+  background:#111; border-left:3px solid #3b82f6;
+  border-radius:0 10px 10px 0;
+  padding:18px 22px; margin:6px 0;
+}
+.quote-block .q-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;}
+.quote-block .q-body{font-size:14px;color:#888;line-height:1.7;}
+.quote-block .q-body .hl{color:#3b82f6;font-weight:700;}
+
+/* ── STEP ROW ── */
+.steps{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;}
+.step-row{display:flex;align-items:flex-start;gap:16px;}
+.step-num{
+  width:36px;height:36px;border-radius:50%;
+  background:#3b82f6;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:15px;flex-shrink:0;margin-top:2px;
+}
+.step-num.check{background:#111;border:2px solid #3b82f6;color:#3b82f6;}
+.step-text{font-size:17px;line-height:1.6;color:#e5e5e5;}
+.step-text strong{color:#fff;}
+.step-text small{display:block;font-size:13px;color:#555;margin-top:2px;}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-card{background:#111;border:1px solid #222;border-radius:10px;padding:18px;text-align:center;}
+.stat-card .num{font-size:36px;font-weight:900;color:#3b82f6;}
+.stat-card .desc{font-size:12px;color:#555;margin-top:6px;line-height:1.5;}
+
+/* ── AUTHOR CARD ── */
+.author-card{
+  background:#111;border:1px solid #222;border-radius:12px;
+  padding:24px 20px; display:flex;flex-direction:column;gap:10px;height:100%;
+}
+.author-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;color:#555;}
+.author-name{font-size:20px;font-weight:700;color:#fff;}
+.author-sub{font-size:12px;color:#555;}
+.author-bio{font-size:12px;color:#666;line-height:1.6;margin-top:6px;}
+.avatar{width:52px;height:52px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:24px;}
+
+/* ── SPLIT LAYOUT ── */
+.split{display:flex;gap:20px;flex:1;}
+.split-left{width:320px;flex-shrink:0;}
+.split-right{flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center;}
+
+/* ── Q FRAME ── */
+.q-frame{
+  background:#111;border:1px solid #222;border-radius:10px;padding:14px 18px;
+  display:flex;gap:14px;align-items:center;
+}
+.q-badge{
+  background:#0d1f3c;color:#3b82f6;font-weight:700;font-size:13px;
+  border-radius:6px;padding:4px 10px;flex-shrink:0;
+  font-family:'Space Mono',monospace;
+}
+.q-text{font-size:15px;line-height:1.5;color:#ddd;}
+
+/* ── NAV ── */
+#nav{
+  position:fixed;bottom:20px;right:24px;
+  display:flex;gap:8px;z-index:999;
+}
+#nav button{
+  background:#111;border:1px solid #333;color:#fff;
+  padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;
+  font-family:'Noto Sans KR',sans-serif;
+}
+#nav button:hover{background:#3b82f6;border-color:#3b82f6;}
+#nav-info{padding:8px 14px;background:#111;border:1px solid #222;border-radius:6px;font-size:12px;color:#555;font-family:'Space Mono',monospace;display:flex;align-items:center;}
+#progress{position:fixed;top:0;left:0;height:2px;background:#3b82f6;transition:width .3s;z-index:999;}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<!-- 01 COVER -->
+<div class="slide" id="s1">
+  <div class="label">리채피 · RICHAPPY YOUTUBE</div>
+  <h1>시장이 무너진다는 뉴스,<br><span class="blue">행동경제학자라면</span><br>이렇게 대응합니다</h1>
+  <div style="margin-top:14px;font-size:16px;font-weight:700;color:#3b82f6;letter-spacing:.03em;">
+    1. 부정성 편향 · 2. 전망이론 · 3. 넛지 · 4. 역사 데이터 · 5. 루틴
+  </div>
+  <div class="sub-bar">뉴스보다 심리가 문제입니다 — 행동경제학이 답합니다</div>
+  <svg class="radar" viewBox="0 0 340 340">
+    <circle cx="170" cy="170" r="155"/>
+    <circle cx="170" cy="170" r="115"/>
+    <circle cx="170" cy="170" r="75"/>
+    <circle cx="170" cy="170" r="38"/>
+    <circle cx="170" cy="170" r="8" fill="#2563eb" stroke="none"/>
+    <line x1="15" y1="170" x2="325" y2="170" stroke="#1a2a3a" stroke-width="1"/>
+    <line x1="170" y1="15" x2="170" y2="325" stroke="#1a2a3a" stroke-width="1"/>
+  </svg>
+</div>
+
+<!-- 02 핵심 메시지 -->
+<div class="slide" id="s2">
+  <div class="label">00 · 핵심 메시지</div>
+  <h2>뉴스는 바뀌지 않는다.<br>바뀌어야 하는 건 뉴스를 읽는 <span class="blue">나의 구조</span>다.</h2>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px;">
+    <div class="quote-block">
+      <div class="q-title">의지력으로 감정을 이기려 하지 마라</div>
+      <div class="q-body">감정이 잘못된 선택으로 이어지는 <span class="hl">경로 자체를 차단</span>하라<br>— 행동경제학의 결론</div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 오늘 구성 -->
+<div class="slide" id="s3">
+  <div class="label">00 · 오늘 영상 구성</div>
+  <h2>행동경제학자라면 <span class="blue">이렇게</span> 대응한다</h2>
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <div class="step-label">STEP 1 · 원인</div>
+      <h3>왜 우리는 공포에 반응하나</h3>
+      <p>부정성 편향 · 생존 본능</p>
+      <div class="icon">🧠</div>
+    </div>
+    <div class="card">
+      <div class="step-label">STEP 2 · 이론</div>
+      <h3>카너먼의 전망이론</h3>
+      <p>손실 고통 × 2.5배의 비밀</p>
+      <div class="icon">📊</div>
+    </div>
+    <div class="card">
+      <div class="step-label">STEP 3 · 설계</div>
+      <h3>탈러의 넛지 구조</h3>
+      <p>감정 경로를 차단하는 3가지</p>
+      <div class="icon">⚙️</div>
+    </div>
+    <div class="card">
+      <div class="step-label">STEP 4 · 데이터</div>
+      <h3>역사 속 경고 뉴스의 진실</h3>
+      <p>JP모건 30년 연구 결과</p>
+      <div class="icon">📅</div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 본론1 부정성 편향 -->
+<div class="slide" id="s4">
+  <div class="label">01 · 본론 1 · 원인</div>
+  <h2>우리는 왜 나쁜 뉴스에<br><span class="blue">더 강하게 반응</span>할까</h2>
+  <div style="flex:1;display:flex;align-items:center;">
+    <div style="display:flex;flex-direction:column;gap:14px;width:100%;">
+      <div class="quote-block">
+        <div class="q-title">1973년 심리학 실험</div>
+        <div class="q-body">좋은 소식 80% vs 나쁜 소식 20% — 수학적으로 같지만<br>나쁜 소식을 읽었을 때 <span class="hl">불안 수준이 압도적으로 높았다</span></div>
+      </div>
+      <div style="font-size:15px;color:#555;line-height:1.7;">
+        이것이 <span style="color:#fff;font-weight:700;">부정성 편향(Negativity Bias)</span>입니다.<br>
+        인간은 좋은 정보보다 나쁜 정보에 생물학적으로 더 민감하게 반응하도록 진화했습니다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 카너먼 전망이론 -->
+<div class="slide" id="s5">
+  <div class="label">01 · 본론 1 · 다니엘 카너먼 · 2002 노벨경제학상</div>
+  <h2>전망이론 — 손실의 고통은<br>이익의 기쁨보다 <span class="blue">2.5배 크다</span></h2>
+  <div class="split" style="margin-top:16px;">
+    <div class="split-left">
+      <div class="author-card">
+        <div class="avatar">👨‍🏫</div>
+        <div class="author-label">FRAMEWORK BASIS</div>
+        <div class="author-name">다니엘 카너먼</div>
+        <div class="author-sub">Daniel Kahneman · Princeton</div>
+        <div class="author-bio">『생각에 관한 생각』 저자. 인간은 합리적이지 않다는 사실을 수십 년의 실험으로 증명한 행동경제학의 창시자.</div>
+      </div>
+    </div>
+    <div class="split-right">
+      <div class="quote-block">
+        <div class="q-title">Prospect Theory 핵심</div>
+        <div class="q-body">100만원 이익의 기쁨보다<br>100만원 손실의 고통이 <span class="hl">2.5배 더 크게 느껴진다</span></div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div class="card" style="flex:1;text-align:center;padding:18px 12px;">
+          <div style="font-size:30px;font-weight:900;color:#3b82f6;">+100만</div>
+          <div style="font-size:12px;color:#555;margin-top:4px;">이익의 기쁨 × 1</div>
+        </div>
+        <div class="card" style="flex:1;text-align:center;padding:18px 12px;">
+          <div style="font-size:30px;font-weight:900;color:#ef4444;">−100만</div>
+          <div style="font-size:12px;color:#555;margin-top:4px;">손실의 고통 × 2.5</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 넛지 도입 -->
+<div class="slide" id="s6">
+  <div class="label">02 · 본론 2 · 리처드 탈러 · 2017 노벨경제학상</div>
+  <h2>넛지 — 감정을 이기는 게 아니라<br><span class="blue">경로를 차단</span>하라</h2>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;">
+    <div class="quote-block">
+      <div class="q-title">"스스로를 믿지 마라. 대신 스스로를 설계하라."</div>
+      <div class="q-body">— 리처드 탈러 (Richard Thaler)</div>
+    </div>
+    <div style="font-size:15px;color:#666;line-height:1.7;">
+      투자에서 나쁜 판단의 원인은 <span style="color:#fff;font-weight:700;">의지력 부족이 아닙니다.</span><br>
+      나쁜 판단이 자동으로 일어나는 <span style="color:#3b82f6;font-weight:700;">구조</span>를 아직 바꾸지 않은 것입니다.
+    </div>
+  </div>
+</div>
+
+<!-- 07 넛지 3가지 구조 -->
+<div class="slide" id="s7">
+  <div class="label">02 · 본론 2 · 탈러가 제안한 투자 구조</div>
+  <h2>나쁜 판단을 막는 <span class="blue">3가지 구조</span></h2>
+  <div class="steps" style="margin-top:14px;">
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>계좌 확인 빈도를 줄여라</strong>
+        <small>매일 보면 매일 손실을 경험한다 → 나쁜 판단 반복 → 확인 횟수를 주 1회로 구조화</small>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>뉴스 읽은 후 24시간 내 매매 금지 규칙</strong>
+        <small>규칙을 세워두면 감정이 아닌 구조가 결정한다 — 내 thesis를 바꾸는 뉴스인지 먼저 물을 것</small>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>공포 뉴스 일지를 써라</strong>
+        <small>6개월 후 다시 꺼내보면 패턴이 보인다 → 소음 vs 신호 필터가 내 안에 생긴다</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 탈러 명언 -->
+<div class="slide" id="s8">
+  <div class="label">02 · 본론 2 · 손에 남는 것</div>
+  <div style="flex:1;display:flex;align-items:center;">
+    <div style="width:100%;">
+      <div class="quote-block" style="padding:32px 36px;">
+        <div style="font-size:28px;font-weight:700;line-height:1.55;color:#fff;">
+          "가장 성공적인 투자자들 중 일부는,<br>
+          자신들이 계좌를 갖고 있다는 사실을<br>
+          <span class="blue">잊어버린 사람들</span>이다."
+        </div>
+        <div style="margin-top:18px;font-size:13px;color:#555;font-family:'Space Mono',monospace;">— Richard Thaler · 2017 Nobel Prize in Economics</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 역사 데이터 -->
+<div class="slide" id="s9">
+  <div class="label">03 · 본론 3 · 역사가 보여주는 패턴</div>
+  <h2>경고는 <span class="blue">항상 옳았고</span><br>타이밍은 <span style="color:#ef4444;">항상 틀렸다</span></h2>
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <div class="step-label">1999년 · 닷컴버블 경고</div>
+      <h3>경고 후 2년간 나스닥 <span class="blue">+80%</span></h3>
+      <p>그리고 나서야 실제 폭락</p>
+    </div>
+    <div class="card">
+      <div class="step-label">2006년 · 서브프라임 경고</div>
+      <h3>경고 후 2007년 <span style="color:#ef4444;">사상 최고가</span></h3>
+      <p>최고가를 통째로 날린 사람들</p>
+    </div>
+    <div class="card">
+      <div class="step-label">2011년 · 유럽 재정위기 경고</div>
+      <h3>S&amp;P500 경고 후 <span class="blue">3년 상승</span></h3>
+      <p>공포에 판 사람들의 기회비용</p>
+    </div>
+    <div class="card">
+      <div class="step-label">2020년 · 코로나 경고</div>
+      <h3>폭락 후 <span class="blue">1년 내 신고가</span></h3>
+      <p>공포가 극에 달했던 그 날의 의미</p>
+    </div>
+  </div>
+</div>
+
+<!-- 10 JP모건 데이터 -->
+<div class="slide" id="s10">
+  <div class="label">03 · 본론 3 · JP모건 연구 · S&amp;P500 · 1990–2020</div>
+  <h2>'폭발적 수익일'은 공포가 극에 달한<br><span class="blue">직후에 집중</span>된다</h2>
+  <div class="stat-grid" style="margin-top:20px;">
+    <div class="stat-card">
+      <div class="num">10.7%</div>
+      <div class="desc">30년 연평균 수익률<br>(완전 보유)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#888;">5.5%</div>
+      <div class="desc">상위 10일 놓쳤을 때</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#555;">2.0%</div>
+      <div class="desc">상위 20일 놓쳤을 때</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:#333;">−%</div>
+      <div class="desc">상위 30일 놓쳤을 때<br>(마이너스 수익)</div>
+    </div>
+  </div>
+  <div style="margin-top:14px;font-size:14px;color:#555;">
+    공포에 팔고 빠져나온 날이 바로 <span style="color:#3b82f6;font-weight:700;">'상위 10일'</span>이었을 가능성이 높습니다.
+  </div>
+</div>
+
+<!-- 11 핵심 질문 프레임 -->
+<div class="slide" id="s11">
+  <div class="label">03 · 본론 3 · 뉴스를 볼 때 이 질문을 하세요</div>
+  <h2>이 뉴스가 내 <span class="blue">투자 thesis</span>를 바꾸는가,<br>아니면 <span style="color:#ef4444;">시장의 감정</span>을 반영하는가?</h2>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;">
+    <div class="quote-block">
+      <div class="q-title">Thesis를 바꾸는 뉴스 → 재검토 필요</div>
+      <div class="q-body">기업 펀더멘털 변화 · 장기 산업 구조 변화 · 새로운 경쟁자 등장</div>
+    </div>
+    <div class="quote-block" style="border-color:#333;">
+      <div class="q-title" style="color:#666;">감정만 건드리는 뉴스 → 일지에 기록</div>
+      <div class="q-body" style="color:#444;">경기 침체 공포 · 전문가 예측 · 단기 시장 변동성 헤드라인</div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 뉴스 루틴 -->
+<div class="slide" id="s12">
+  <div class="label">04 · 본론 4 · 행복한 부자의 뉴스 루틴</div>
+  <h2>하루 <span class="blue">15분</span>, 이 루틴으로<br>뉴스에 지배당하지 마라</h2>
+  <div class="steps" style="margin-top:14px;">
+    <div class="step-row">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <strong>뉴스 시간 고정 — 아침 식사 후 15분</strong>
+        <small>그 외 시간에는 뉴스 앱을 닫는다. 알림 OFF. 구조가 규칙을 대신한다.</small>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <strong>3가지 메모 — 핵심 주장 / thesis 변화 / 6개월 후 관점</strong>
+        <small>메모하는 행위 자체가 감정을 분리하고 이성을 작동시킨다.</small>
+      </div>
+    </div>
+    <div class="step-row">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <strong>월 1회 공포 뉴스 리뷰</strong>
+        <small>지난달의 공포가 현실이 됐는가? 이 반복이 소음 vs 신호 필터를 만든다.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 4가지 질문 프레임 -->
+<div class="slide" id="s13">
+  <div class="label">05 · 본론 5 · 공포 뉴스 4가지 질문 프레임</div>
+  <h2>공포 뉴스를 보는 순간<br><span class="blue">이 4가지를 물어라</span></h2>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">
+    <div class="q-frame">
+      <div class="q-badge">Q1</div>
+      <div class="q-text">이 뉴스를 <strong>누가 썼고, 왜 썼을까?</strong></div>
+    </div>
+    <div class="q-frame">
+      <div class="q-badge">Q2</div>
+      <div class="q-text">이 경고는 <strong>새로운 정보인가, 반복 패턴인가?</strong></div>
+    </div>
+    <div class="q-frame">
+      <div class="q-badge">Q3</div>
+      <div class="q-text">내 포트폴리오에 <strong>실제로 몇 % 영향인가?</strong></div>
+    </div>
+    <div class="q-frame">
+      <div class="q-badge">Q4</div>
+      <div class="q-text"><strong>6개월 후의 내가</strong> 지금 내게 뭐라고 할까?</div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 핵심 정리 -->
+<div class="slide" id="s14">
+  <div class="label">06 · 오늘의 핵심 정리</div>
+  <h2>행복한 부자는 시장을 이기는 사람이 아닙니다.<br><span class="blue">자기 자신을 이기는 구조를 만든 사람</span>입니다.</h2>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+    <div class="step-row">
+      <div class="step-num check">✓</div>
+      <div class="step-text">공포 반응은 <strong>인간의 본능</strong> — 의지로 이기려 하지 마라</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num check">✓</div>
+      <div class="step-text">경고는 대부분 맞다. 하지만 <strong>타이밍은 틀린다</strong></div>
+    </div>
+    <div class="step-row">
+      <div class="step-num check">✓</div>
+      <div class="step-text">답은 <strong>구조와 루틴</strong> — 감정의 경로를 차단하라</div>
+    </div>
+    <div class="step-row">
+      <div class="step-num check">✓</div>
+      <div class="step-text">Thesis를 바꾸면 재검토, 감정만 건드리면 <strong>일지에 기록</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- 15 OUTRO -->
+<div class="slide" id="s15">
+  <div class="label">리채피 · RICHAPPY YOUTUBE</div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <h1>여러분은 반드시<br><span class="blue">행복한 부자</span>가 됩니다.</h1>
+    <div style="margin-top:20px;font-size:16px;color:#555;line-height:1.8;">
+      구독 · 좋아요 · 댓글로 함께해 주세요<br>
+      리채피였습니다. 감사합니다.
+    </div>
+    <div style="margin-top:28px;">
+      <div class="card" style="display:inline-flex;flex-direction:column;padding:14px 24px;">
+        <div class="step-label">SUBSCRIBE</div>
+        <div style="font-size:16px;font-weight:700;margin-top:2px;">@richappy_youtube</div>
+      </div>
+    </div>
+  </div>
+  <svg class="radar" viewBox="0 0 340 340" style="opacity:.25;">
+    <circle cx="170" cy="170" r="155" stroke="#1a2a3a"/>
+    <circle cx="170" cy="170" r="115" stroke="#1a2a3a"/>
+    <circle cx="170" cy="170" r="75" stroke="#1a2a3a"/>
+    <circle cx="170" cy="170" r="38" stroke="#1a2a3a"/>
+    <circle cx="170" cy="170" r="8" fill="#2563eb" stroke="none"/>
+  </svg>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button onclick="go(-1)">◀ 이전</button>
+  <div id="nav-info">01 / 15</div>
+  <button onclick="go(1)">다음 ▶</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+function go(d){
+  cur = Math.max(0, Math.min(slides.length-1, cur+d));
+  slides[cur].scrollIntoView({behavior:'smooth',block:'center'});
+  document.getElementById('nav-info').textContent =
+    String(cur+1).padStart(2,'0') + ' / ' + slides.length;
+  document.getElementById('progress').style.width =
+    ((cur+1)/slides.length*100) + '%';
+}
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') go(-1);
+});
+go(0);
+</script>
+</body>
+</html>

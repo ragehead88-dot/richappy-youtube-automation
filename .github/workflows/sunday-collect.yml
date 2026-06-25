@@ -1,0 +1,37 @@
+name: 일요일 09:00 — 경쟁 채널 수집
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"  # 일요일 00:00 UTC = 09:00 KST
+  workflow_dispatch:       # 수동 실행 버튼
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: yt-dlp 설치
+        run: pip install yt-dlp
+
+      - name: 경쟁 채널 수집 실행
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python scripts/collect_competitors.py
+
+      - name: latest_collection.json 보관 (다음 워크플로우용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: collection-data
+          path: latest_collection.json
+          retention-days: 2
