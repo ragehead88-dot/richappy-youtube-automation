@@ -6,7 +6,9 @@ on:
     types:
       - completed
   workflow_dispatch:
-
+permissions:
+  actions: read
+  contents: read
 jobs:
   proposals:
     runs-on: ubuntu-latest
