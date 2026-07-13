@@ -1,0 +1,43 @@
+name: 리채피 유튜브 일일 리포트
+
+on:
+  schedule:
+    - cron: '0 23 * * *'  # 한국시간 오전 8시 (UTC 23:00 전날)
+  workflow_dispatch:       # 수동 실행 버튼
+
+jobs:
+  youtube-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: seen_videos.json 복원
+        uses: actions/cache@v4
+        with:
+          path: seen_videos.json
+          key: seen-videos-${{ github.run_id }}
+          restore-keys: |
+            seen-videos-
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 패키지 설치
+        run: pip install requests anthropic
+
+      - name: 유튜브 리포트 실행
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python scripts/youtube_monitor.py
+
+      - name: seen_videos.json 저장
+        uses: actions/cache/save@v4
+        with:
+          path: seen_videos.json
+          key: seen-videos-${{ github.run_id }}
