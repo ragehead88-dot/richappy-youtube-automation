@@ -191,7 +191,7 @@ def extract_ideas(analysis):
     for line in lines:
         if "아이디어" in line and ("1" in line or "2" in line or "3" in line):
             continue
-        if line.strip().startswith(("- \"", "- \""", "1. \"", "2. \"", "3. \"")):
+        if line.strip().startswith(("- \"", "1. \"", "2. \"", "3. \"")):
             text = line.strip().lstrip("123.- \"").strip().rstrip("\"")
             if idx < 3:
                 ideas[idx] = text[:200]
