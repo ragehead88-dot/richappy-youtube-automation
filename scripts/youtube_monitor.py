@@ -6,7 +6,7 @@ from datetime import datetime
 YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 NOTION_TOKEN = os.environ["NOTION_TOKEN"].strip()
-NOTION_PARENT_PAGE_ID = "2eeccc610ced80528052ed84cb6df828"
+NOTION_PARENT_PAGE_ID = "39cccc610ced8124ac62de7748b10151"
 
 MY_CHANNEL_ID = "UCopbo8p9-a5XyT6k7o1zSwQ"
 MY_CHANNEL_NAME = "리채피 richappy"
