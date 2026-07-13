@@ -151,73 +151,77 @@ def analyze_with_claude(my_stats, my_recent, all_videos):
         for v in my_recent
     ])
 
-    prompt = f"""당신은 유튜브 채널 전략 전문가입니다.
+    prompt = f"""당신은 리채피 유튜브 채널 전략 전문가입니다.
 
-채널명: {MY_CHANNEL_NAME}
-채널 컨셉: {MY_CHANNEL_CONCEPT}
-구독자: {my_stats['subscribers']:,}명 | 총 조회수: {my_stats['total_views']:,}
+## 채널 정보
+- 채널명: {MY_CHANNEL_NAME}
+- 컨셉: {MY_CHANNEL_CONCEPT}
+- 구독자: {my_stats['subscribers']:,}명
+- 검증된 흥행 공식: ①유명인+숫자(켄피셔 16,373회) ②90%가모름+3가지 ③인문학+투자 심리 결합
+- 피해야 할 패턴: 추상어 단독, 종목 추천, 인지도 낮은 인물
 
-내 최근 영상:
+## 내 최근 영상 성과
 {my_summary}
 
-경쟁 채널 인기 영상:
+## 경쟁 채널 인기 영상 (조회수 순)
 {monitored_summary}
 
-다음을 분석해주세요:
+---
 
-### 1. 트렌드 분석
-지금 뜨는 주제 3가지 (간략히)
+아래 JSON 형식으로만 응답하세요. 다른 텍스트 없이 JSON만 출력하세요.
 
-### 2. 다음 영상 아이디어 TOP 3
-리채피 컨셉(인문학+투자)에 맞게:
-- 제목 2가지 버전
-- 썸네일 텍스트 제안
-- 핵심 내용 2줄
-
-### 3. 채널 성장 한 줄 조언"""
+{{
+  "트렌드키워드": "키워드1, 키워드2, 키워드3",
+  "아이디어": [
+    {{
+      "제목1": "후킹되는 제목 버전1",
+      "제목2": "후킹되는 제목 버전2",
+      "썸네일": "1줄(작게): 텍스트 / 2줄(크게): 텍스트 / 3줄(강조): 텍스트",
+      "핵심내용": "이 영상의 핵심 내용 1~2줄 요약"
+    }},
+    {{
+      "제목1": "후킹되는 제목 버전1",
+      "제목2": "후킹되는 제목 버전2",
+      "썸네일": "1줄(작게): 텍스트 / 2줄(크게): 텍스트 / 3줄(강조): 텍스트",
+      "핵심내용": "이 영상의 핵심 내용 1~2줄 요약"
+    }},
+    {{
+      "제목1": "후킹되는 제목 버전1",
+      "제목2": "후킹되는 제목 버전2",
+      "썸네일": "1줄(작게): 텍스트 / 2줄(크게): 텍스트 / 3줄(강조): 텍스트",
+      "핵심내용": "이 영상의 핵심 내용 1~2줄 요약"
+    }}
+  ],
+  "성장조언": "채널 성장을 위한 핵심 조언 한 줄"
+}}"""
 
     msg = client.messages.create(
         model="claude-opus-4-8",
         max_tokens=1500,
         messages=[{"role": "user", "content": prompt}]
     )
-    return msg.content[0].text
-
-
-def extract_ideas(analysis):
-    ideas = ["", "", ""]
-    lines = analysis.split("\n")
-    idx = 0
-    for line in lines:
-        if "아이디어" in line and ("1" in line or "2" in line or "3" in line):
-            continue
-        if line.strip().startswith(("- \"", "1. \"", "2. \"", "3. \"")):
-            text = line.strip().lstrip("123.- \"").strip().rstrip("\"")
-            if idx < 3:
-                ideas[idx] = text[:200]
-                idx += 1
-    return ideas
-
-
-def extract_trends(analysis):
-    trends = []
-    in_trend = False
-    for line in analysis.split("\n"):
-        if "트렌드" in line:
-            in_trend = True
-            continue
-        if in_trend and line.strip().startswith(("1.", "2.", "3.", "-", "**")):
-            text = line.strip().lstrip("123.-* ").strip().rstrip("**")
-            if text:
-                trends.append(text[:50])
-        if in_trend and len(trends) >= 3:
-            break
-    return ", ".join(trends[:3])
+    raw = msg.content[0].text.strip()
+    # JSON 블록 추출
+    if "```" in raw:
+        raw = raw.split("```")[1].replace("json", "").strip()
+    return json.loads(raw)
 
 
 def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
     today = datetime.now()
     title = f"유튜브 채널 리포트 — {today.year}년 {today.month}월 {today.day}일"
+
+    ideas = analysis.get("아이디어", [{}, {}, {}])
+    trends = analysis.get("트렌드키워드", "")
+    advice = analysis.get("성장조언", "")
+
+    def idea_title(i, idx):
+        t1 = i.get("제목1", "")
+        t2 = i.get("제목2", "")
+        return f"[제목A] {t1}\n[제목B] {t2}"[:1990] if idx < len(ideas) else ""
+
+    def idea_thumb(i, idx):
+        return i.get("썸네일", "")[:1990] if idx < len(ideas) else ""
 
     my_videos_table = "| 제목 | 조회수 | 좋아요 |\n|------|--------|--------|\n"
     for v in my_recent:
@@ -234,6 +238,16 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
         for v in new_videos[:10]:
             new_section += f"- **[{v['channel']}]** [{v['title']}]({v['url']}) — 조회수 {v['views']:,}\n"
 
+    idea_section = ""
+    for idx, idea in enumerate(ideas[:3], 1):
+        idea_section += f"""
+### 아이디어 {idx}
+- 제목A: {idea.get('제목1', '')}
+- 제목B: {idea.get('제목2', '')}
+- 썸네일: {idea.get('썸네일', '')}
+- 핵심내용: {idea.get('핵심내용', '')}
+"""
+
     content = f"""## 📊 내 채널 현황
 
 | 항목 | 수치 |
@@ -248,9 +262,13 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
 ## 🔥 경쟁 채널 TOP 5 (조회수 기준)
 
 {top5_table}{new_section}
-## 🤖 AI 분석 및 아이디어 추천
+## 💡 오늘의 트렌드 키워드
+{trends}
 
-{analysis}"""
+## 🎯 다음 영상 아이디어 TOP 3
+{idea_section}
+## 📌 성장 조언
+{advice}"""
 
     headers = {
         "Authorization": f"Bearer {NOTION_TOKEN}",
@@ -258,10 +276,10 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
         "Notion-Version": "2022-06-28",
     }
 
-    ideas = extract_ideas(analysis)
-    trends = extract_trends(analysis)
+    i1 = ideas[0] if len(ideas) > 0 else {}
+    i2 = ideas[1] if len(ideas) > 1 else {}
+    i3 = ideas[2] if len(ideas) > 2 else {}
 
-    # 데이터베이스에 행 추가
     db_data = {
         "parent": {"database_id": NOTION_DATABASE_ID},
         "icon": {"type": "emoji", "emoji": "📊"},
@@ -271,11 +289,14 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
             "구독자": {"number": my_stats["subscribers"]},
             "총조회수": {"number": my_stats["total_views"]},
             "신규영상수": {"number": len(new_videos)},
-            "트렌드키워드": {"rich_text": [{"text": {"content": trends}}]},
-            "아이디어1_제목": {"rich_text": [{"text": {"content": ideas[0]}}]},
-            "아이디어2_제목": {"rich_text": [{"text": {"content": ideas[1]}}]},
-            "아이디어3_제목": {"rich_text": [{"text": {"content": ideas[2]}}]},
-            "AI분석요약": {"rich_text": [{"text": {"content": analysis[:1900]}}]},
+            "트렌드키워드": {"rich_text": [{"text": {"content": trends[:1990]}}]},
+            "아이디어1_제목": {"rich_text": [{"text": {"content": idea_title(i1, 0)}}]},
+            "아이디어1_썸네일": {"rich_text": [{"text": {"content": idea_thumb(i1, 0)}}]},
+            "아이디어2_제목": {"rich_text": [{"text": {"content": idea_title(i2, 1)}}]},
+            "아이디어2_썸네일": {"rich_text": [{"text": {"content": idea_thumb(i2, 1)}}]},
+            "아이디어3_제목": {"rich_text": [{"text": {"content": idea_title(i3, 2)}}]},
+            "아이디어3_썸네일": {"rich_text": [{"text": {"content": idea_thumb(i3, 2)}}]},
+            "AI분석요약": {"rich_text": [{"text": {"content": advice[:1990]}}]},
         },
         "children": [
             {
