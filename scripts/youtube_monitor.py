@@ -37,8 +37,17 @@ def save_seen(seen):
 
 
 def get_channel_id(handle):
+    clean = handle.lstrip("@")
+    res = requests.get(f"{BASE_URL}/channels", params={
+        "key": YOUTUBE_API_KEY, "forHandle": handle,
+        "part": "snippet", "maxResults": 1,
+    }).json()
+    items = res.get("items", [])
+    if items:
+        return items[0]["id"], items[0]["snippet"]["title"]
+    # fallback to search
     res = requests.get(f"{BASE_URL}/search", params={
-        "key": YOUTUBE_API_KEY, "q": handle, "type": "channel",
+        "key": YOUTUBE_API_KEY, "q": clean, "type": "channel",
         "part": "snippet", "maxResults": 1,
     }).json()
     items = res.get("items", [])
