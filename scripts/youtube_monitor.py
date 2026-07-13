@@ -7,6 +7,7 @@ YOUTUBE_API_KEY = os.environ["YOUTUBE_API_KEY"]
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 NOTION_TOKEN = os.environ["NOTION_TOKEN"].strip()
 NOTION_PARENT_PAGE_ID = "39cccc610ced8124ac62de7748b10151"
+NOTION_DATABASE_ID = "34cd019660f94d3684a493d4244475db"
 
 MY_CHANNEL_ID = "UCopbo8p9-a5XyT6k7o1zSwQ"
 MY_CHANNEL_NAME = "리채피 richappy"
@@ -183,6 +184,37 @@ def analyze_with_claude(my_stats, my_recent, all_videos):
     return msg.content[0].text
 
 
+def extract_ideas(analysis):
+    ideas = ["", "", ""]
+    lines = analysis.split("\n")
+    idx = 0
+    for line in lines:
+        if "아이디어" in line and ("1" in line or "2" in line or "3" in line):
+            continue
+        if line.strip().startswith(("- \"", "- \""", "1. \"", "2. \"", "3. \"")):
+            text = line.strip().lstrip("123.- \"").strip().rstrip("\"")
+            if idx < 3:
+                ideas[idx] = text[:200]
+                idx += 1
+    return ideas
+
+
+def extract_trends(analysis):
+    trends = []
+    in_trend = False
+    for line in analysis.split("\n"):
+        if "트렌드" in line:
+            in_trend = True
+            continue
+        if in_trend and line.strip().startswith(("1.", "2.", "3.", "-", "**")):
+            text = line.strip().lstrip("123.-* ").strip().rstrip("**")
+            if text:
+                trends.append(text[:50])
+        if in_trend and len(trends) >= 3:
+            break
+    return ", ".join(trends[:3])
+
+
 def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
     today = datetime.now()
     title = f"유튜브 채널 리포트 — {today.year}년 {today.month}월 {today.day}일"
@@ -226,12 +258,24 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
         "Notion-Version": "2022-06-28",
     }
 
-    # 페이지 생성
-    data = {
-        "parent": {"page_id": NOTION_PARENT_PAGE_ID},
+    ideas = extract_ideas(analysis)
+    trends = extract_trends(analysis)
+
+    # 데이터베이스에 행 추가
+    db_data = {
+        "parent": {"database_id": NOTION_DATABASE_ID},
         "icon": {"type": "emoji", "emoji": "📊"},
         "properties": {
-            "title": {"title": [{"text": {"content": title}}]}
+            "Name": {"title": [{"text": {"content": title}}]},
+            "날짜": {"date": {"start": today.strftime("%Y-%m-%d")}},
+            "구독자": {"number": my_stats["subscribers"]},
+            "총조회수": {"number": my_stats["total_views"]},
+            "신규영상수": {"number": len(new_videos)},
+            "트렌드키워드": {"rich_text": [{"text": {"content": trends}}]},
+            "아이디어1_제목": {"rich_text": [{"text": {"content": ideas[0]}}]},
+            "아이디어2_제목": {"rich_text": [{"text": {"content": ideas[1]}}]},
+            "아이디어3_제목": {"rich_text": [{"text": {"content": ideas[2]}}]},
+            "AI분석요약": {"rich_text": [{"text": {"content": analysis[:1900]}}]},
         },
         "children": [
             {
@@ -244,7 +288,7 @@ def save_to_notion(my_stats, my_recent, new_videos, all_videos, analysis):
         ]
     }
 
-    res = requests.post("https://api.notion.com/v1/pages", headers=headers, json=data)
+    res = requests.post("https://api.notion.com/v1/pages", headers=headers, json=db_data)
     result = res.json()
     return result.get("url", "URL 없음")
 
