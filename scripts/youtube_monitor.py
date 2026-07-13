@@ -325,7 +325,10 @@ def run():
     seen_ids = load_seen()
     new_videos, all_videos, seen_ids = collect_monitored_channels(seen_ids)
     save_seen(seen_ids)
+    print(f"  수집된 전체 영상: {len(all_videos)}개")
     print(f"  신규 영상: {len(new_videos)}개")
+    for v in sorted(all_videos, key=lambda x: x['views'], reverse=True)[:5]:
+        print(f"  [{v['channel']}] {v['title'][:40]} | 조회수: {v['views']:,}")
 
     print("🤖 Claude AI 분석 중...")
     analysis = analyze_with_claude(my_stats, my_recent, all_videos)
